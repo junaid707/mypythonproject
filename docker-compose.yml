@@ -17,5 +17,29 @@ services:
     networks:
       - monitoring
 
+  pushgateway:
+    image: prom/pushgateway:latest
+    ports:
+      - '9091:9091'
+    networks:
+      - monitoring
+
+  pusher:
+    build: .
+    command: python push_metrics.py
+    depends_on:
+      - pushgateway
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
 networks:
   monitoring:

@@ -64,3 +64,36 @@ Visit http://localhost:9090 to open Prometheus web UI and query metrics like `ap
 
 Notes
 - This demo uses `prometheus_client.start_http_server` to expose metrics on a separate port (8000). In production you can integrate metrics into the same HTTP server or export via WSGI middleware.
+
+Pushgateway and continuous push example
+
+This repo now includes a `push_metrics.py` worker which periodically pushes a metric named `batch_random_value` to a Pushgateway instance.
+
+Docker Compose services added:
+- `pushgateway` at http://localhost:9091
+- `pusher` runs `push_metrics.py` and pushes values every 5s by default
+- `grafana` at http://localhost:3000 (default admin/admin credentials on first run)
+
+Prometheus queries to check data
+- Current pushed value:
+  - `batch_random_value`
+- Recent rate of app requests:
+  - `rate(app_request_count[1m])`
+- Total app request count:
+  - `app_request_count`
+
+Grafana quick check
+- Add a Prometheus datasource in Grafana pointing to `http://prometheus:9090` when Grafana runs inside Docker Compose. If you access Grafana from your host, use `http://host.docker.internal:9090` as the URL.
+- Create a new Dashboard and add a Panel with query `batch_random_value` to display the pushed metric.
+
+Docker compose start (app + Prometheus + Pushgateway + pusher + Grafana):
+
+```powershell
+docker compose up --build -d
+```
+
+Open:
+- App: http://localhost:5000/
+- Prometheus: http://localhost:9090/
+- Pushgateway: http://localhost:9091/
+- Grafana: http://localhost:3000/
