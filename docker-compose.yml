@@ -40,6 +40,12 @@ services:
       - prometheus
     networks:
       - monitoring
+  blackbox:
+    image: prom/blackbox-exporter:latest
+    ports:
+      - '9115:9115'
+    networks:
+      - monitoring
 
 networks:
   monitoring:

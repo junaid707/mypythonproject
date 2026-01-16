@@ -1,0 +1,53 @@
+@startuml
+title myPythonProject Architecture
+
+actor Developer
+
+boundary "Docker Host / Local Machine" {
+  node "Docker Network: monitoring" {
+    container "app (Flask + Prometheus client)" as APP
+    container "gunicorn (wsgi)" as GUNICORN
+    container "prometheus" as PROM
+    container "pushgateway" as PGW
+    container "pusher (push_metrics.py)" as PUSHER
+    container "blackbox-exporter" as BLACKBOX
+    container "grafana" as GRAFANA
+  }
+}
+
+Developer -> APP : HTTP requests
+APP -> PROM : exposes metrics on /metrics (scraped)
+PUSHER -> PGW : push metrics (batch_random_value)
+PGW -> PROM : scraped by Prometheus
+BLACKBOX -> ExternalSites : probe HTTP/HTTPS
+PROM -> BLACKBOX : /probe scrape (config)
+GRAFANA -> PROM : query metrics (PromQL)
+Developer -> GRAFANA : view dashboards
+
+cloud "ExternalSites" {
+  [https://example.com]
+  [https://httpbin.org]
+  [https://github.com]
+}
+
+PROM -right-> GRAFANA : scrape + store
+PROM --> APP : scrape /metrics
+PROM --> PGW : scrape pushed metrics
+
+note top of APP
+ - Instrumented with prometheus_client
+ - Counters, Histograms exported
+ - WSGI mounted /metrics via DispatcherMiddleware
+end note
+
+note right of PGW
+ - Receives pushed metrics from batch jobs
+ - Short-lived metric storage until scraped
+end note
+
+note left of BLACKBOX
+ - Probes external websites (http_2xx module)
+ - Exposes probe_success, probe_duration_seconds, probe_http_status_code
+end note
+
+@enduml
