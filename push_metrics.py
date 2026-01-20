@@ -3,7 +3,7 @@ import time
 import random
 from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
-PUSHGATEWAY = os.environ.get('PUSHGATEWAY', 'pushgateway:9091')
+PUSHGATEWAY = os.environ.get('PUSHGATEWAY', '172.18.24.206:9091')
 
 registry = CollectorRegistry()
 g = Gauge('batch_random_value', 'Random value produced by batch job', registry=registry)
